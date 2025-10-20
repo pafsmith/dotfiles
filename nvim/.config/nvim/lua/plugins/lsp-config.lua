@@ -6,14 +6,21 @@ return {
       require("mason").setup()
     end,
   },
-  {
+   {
     "williamboman/mason-lspconfig.nvim",
     lazy = false,
     opts = {
       auto_install = true,
+      ensure_installed = {
+        "tailwindcss",
+        "lua_ls",
+        "ts_ls",
+        "pyright",
+        "gopls",
+      },
     },
   },
-  {
+   {
     "neovim/nvim-lspconfig",
     lazy = false,
     config = function()
@@ -25,6 +32,7 @@ return {
         update_in_insert = false, -- Don't update while typing
         severity_sort = true, -- Sort by severity
       })
+
       local cmp_nvim_lsp = require("cmp_nvim_lsp")
       local capabilities = vim.tbl_deep_extend(
         "force",
@@ -33,20 +41,72 @@ return {
         cmp_nvim_lsp.default_capabilities()
       )
 
-      local lspconfig = require("lspconfig")
+      -- Configure LSP servers using new vim.lsp.config API
+      vim.lsp.config.tailwindcss = {
+        capabilities = capabilities,
+      }
+      vim.lsp.config.lua_ls = {
+        capabilities = capabilities,
+      }
+      vim.lsp.config.ts_ls = {
+        capabilities = capabilities,
+        settings = {
+          typescript = {
+            inlayHints = {
+              includeInlayParameterNameHints = "all",
+              includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+              includeInlayFunctionParameterTypeHints = true,
+              includeInlayVariableTypeHints = true,
+              includeInlayPropertyDeclarationTypeHints = true,
+              includeInlayFunctionLikeReturnTypeHints = true,
+              includeInlayEnumMemberValueHints = true,
+            },
+          },
+          javascript = {
+            inlayHints = {
+              includeInlayParameterNameHints = "all",
+              includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+              includeInlayFunctionParameterTypeHints = true,
+              includeInlayVariableTypeHints = true,
+              includeInlayPropertyDeclarationTypeHints = true,
+              includeInlayFunctionLikeReturnTypeHints = true,
+              includeInlayEnumMemberValueHints = true,
+            },
+          },
+        },
+      }
+      vim.lsp.config.pyright = {
+        capabilities = capabilities,
+        settings = {
+          python = {
+            analysis = {
+              typeCheckingMode = "basic",
+              autoSearchPaths = true,
+              useLibraryCodeForTypes = true,
+            },
+          },
+        },
+      }
+      vim.lsp.config.gopls = {
+        capabilities = capabilities,
+        settings = {
+          gopls = {
+            analyses = {
+              unusedparams = true,
+              shadow = true,
+            },
+            staticcheck = true,
+            gofumpt = true,
+          },
+        },
+      }
 
-      lspconfig.tailwindcss.setup({
-        capabilities = capabilities,
-      })
-      lspconfig.ruby_lsp.setup({
-        capabilities = capabilities,
-      })
-      lspconfig.lua_ls.setup({
-        capabilities = capabilities,
-      })
-      lspconfig.ts_ls.setup({
-        capabilities = capabilities,
-      })
+      -- Enable the configured servers
+      vim.lsp.enable(vim.lsp.config.tailwindcss)
+      vim.lsp.enable(vim.lsp.config.lua_ls)
+      vim.lsp.enable(vim.lsp.config.pyright)
+      vim.lsp.enable(vim.lsp.config.ts_ls)
+      vim.lsp.enable(vim.lsp.config.gopls)
 
       vim.keymap.set("n", "K", vim.lsp.buf.hover, {})
       vim.keymap.set("n", "<leader>gd", vim.lsp.buf.definition, {})
